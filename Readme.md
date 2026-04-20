@@ -10,14 +10,16 @@ Here a visualization of the molecular dynamics simulation with the notebook:
 
 For Neural Networks a different data representation will be required. Numpy will serve as intermediary representation since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization Platform to ensure plausability along each transformation.
 
-The following image shows all atoms as a point cloud:
+A possibility would be to use Graph Neural Networks on an all-atom radius Graph
+The following image shows such a graph with a five Angstrom radius.
+
+The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
 <p align="center">
   <img src="images/Numpy_Points_Paraview.png" alt="Atom Point Cloud" height="300">
   <img src="images/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
 
-A possibility would be to use Graph Neural Networks on an all-atom radius Graph
-The following image shows such a graph with a five Angstrom radius.
+
 
 
 but this does not scale well. Other Papers, such as EquiJump and OPHIUCHUS use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom.
