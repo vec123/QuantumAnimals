@@ -12,8 +12,7 @@ Here a snapshot of the molecular dynamics simulation (see the notebook script):
 
 For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausability along each transformation.
 
-A possibility would be to use Graph Neural Networks on an all-atom radius Graph
-The following image shows such a graph with a five Angstrom radius.
+A possibility would be to use graph neural networks on an all-atom radius graph
 
 The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
 <p align="center">
@@ -22,8 +21,7 @@ The following image shows all atoms as a point cloud and the corresponding  grap
 </p>
 
 
-This representation does not scale well. Other Papers, such as EquiJump and OPHIUCHUS use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom.
-This is a more compact description. A protein can be understood as a one-dimensional sequence of these residue descriptions.
+This representation does not scale well. Other Papers, such as EquiJump and Ophiuchus use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom. A protein can be understood as a one-dimensional sequence of these residue descriptions. This is a more compact description.
 
 <img src="images/Residue_Representation_Paraview.png" alt="Resiude Representation" width="400">
 
