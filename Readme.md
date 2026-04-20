@@ -2,8 +2,8 @@
 Examining Data of Molecular Simulations
 
 
-Reading Papers such as EquiJump has lead to the discovery of a new dataset. Since EquiJump does not provide an Implementation, lets see if we can make it work.
-The compute necessary will be a hurdle, but to code it up and see if it can at least overfit one might use the smallest protein in the dataset.
+Reading Papers such as EquiJump has lead to the discovery of a new dataset. Since EquiJump does not provide a git implementation, lets see if we can make one.
+The necessary compute will be a hurdle, but to code it up and see if it can at least overfit one can use the smallest protein in the dataset.
 
 Here a visualization of the molecular dynamics simulation with the notebook:
 ![MD Visualization](images/mol_traj_visualization.png)
