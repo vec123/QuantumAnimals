@@ -12,11 +12,7 @@ Here a snapshot of the molecular dynamics simulation (see the notebook script):
   <img src="images/mol_traj_visualization.png" alt="MD Visualization">
 </p>
 
-For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausability along each transformation.
-
-A possibility would be to use graph neural networks on an all-atom radius graph
-
-The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
+For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausability along each transformation. A possibility would be to use graph neural networks on an all-atom radius graph. The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
 <p align="center">
   <img src="images/Numpy_Points_Paraview.png" alt="Atom Point Cloud" height="300">
   <img src="images/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" height="300">
