@@ -26,7 +26,7 @@ The following image shows all atoms as a point cloud and the corresponding  grap
 This representation does not scale well. Other Papers, such as EquiJump and Ophiuchus use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom. A protein can be understood as a one-dimensional sequence of these residue descriptions. This description scales better.
 
 <p align="center">
-  <img src="images/Residue_Representation_Paraview.png" alt="Resiude Representation" width="400">
+  <img src="images/Residue_Representation_Paraview.png" alt="Resiude Representation" height="300">
 </p>
 
 
