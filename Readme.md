@@ -12,12 +12,14 @@ For Neural Networks a different data representation will be required. Numpy will
 
 The following image shows all atoms as a point cloud:
 
-<img src="images/Numpy_Points_Paraview.png" alt="Atom Point Cloud" width="400">
+<p align="center">
+  <img src="images/Numpy_Points_Paraview.png" alt="Atom Point Cloud" width="400">
+  <img src="images/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" width="400">
+</p>
 
 A possibility would be to use Graph Neural Networks on an all-atom radius Graph
 The following image shows such a graph with a five Angstrom radius.
 
-<img src="images/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" width="400">
 
 but this does not scale well. Other Papers, such as EquiJump and OPHIUCHUS use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom.
 This is a more compact description. A protein can be understood as a one-dimensional sequence of these residue descriptions.
