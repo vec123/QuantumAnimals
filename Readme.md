@@ -7,7 +7,7 @@ The necessary compute will be a hurdle, but to code it up and see if it can at l
 
 Step 1: Understand the Data and choose a Representation 
 
-Here a visualization of the molecular dynamics simulation with the notebook:
+Here a snapshot of the molecular dynamics simulation (see the notebook script):
 ![MD Visualization](images/mol_traj_visualization.png)
 
 For Neural Networks a different data representation will be required. Numpy will serve as intermediary representation since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization Platform to ensure plausability along each transformation.
