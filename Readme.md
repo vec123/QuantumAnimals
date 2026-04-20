@@ -19,7 +19,7 @@ The following image shows such a graph with a five Angstrom radius.
 
 but this does not scale well. Other Papers, such as EquiJump and OPHIUCHUS use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom.
 This is a more compact description. A protein can be understood as a one-dimensional sequence of these residue descriptions.
-![Resiude Representation](images/Resiude_Representation_Paraview.png)
+![Resiude Representation](images/Residue_Representation_Paraview.png)
 
 
 Curently the functions are to be executed like this:
