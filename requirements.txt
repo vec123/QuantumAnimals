@@ -1,0 +1,7 @@
+ngltview 
+mdtraj
+MDAnalysis
+numpy
+jupyter 
+ipykernel
+pyevtk
