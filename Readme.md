@@ -10,7 +10,7 @@ Step 1: Understand the Data and choose a Representation
 Here a snapshot of the molecular dynamics simulation (see the notebook script):
 ![MD Visualization](images/mol_traj_visualization.png)
 
-For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization Platform to ensure plausability along each transformation.
+For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausability along each transformation.
 
 A possibility would be to use Graph Neural Networks on an all-atom radius Graph
 The following image shows such a graph with a five Angstrom radius.
