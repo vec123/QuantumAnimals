@@ -44,7 +44,7 @@ Three mechanisms need to be implemented.
 
 The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-products with itself) 
 
-the Spatial Convolution (essentially message passing between residual representations)
+the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
 
 the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations.
 
