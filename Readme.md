@@ -54,7 +54,7 @@ Step 4:
 
 The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed focker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
 
-The state of the SDE is X = (P,V), where P is a 3D position and V a tensor product of irreps up to order l_max. By choosing a basis for the representations and treating the tensor as high-dimensional vector in that basis, the SDE on the tensorial part of X can be written as dV = b(X,V)dt + sigma(X,V)dW_t, under the condition that b(X,V) and sigma(X,V) be equivariant. By working in representation space, the linear stochastic interpolaton V_t = t V_1 + (1-t)V_0 + sigma(t)z_t remains valid.
+The state of the SDE is X = (P,V), where P is a 3D position and V a tensor product of irreps up to order l_max. By choosing a basis for the representations and treating the tensor as high-dimensional vector in that basis, the SDE on the tensorial part of X can be written as dV = b(X,V)dt + sigma(X,V)dW_t, under the condition that b(X,V) and sigma(X,V) be equivariant. By working in this basis, the linear stochastic interpolaton V_t = t V_1 + (1-t)V_0 + sigma(t)z_t remains valid.
 
 (ToDo)
 
