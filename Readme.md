@@ -41,7 +41,7 @@ The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its labe
 </p>
 
 <p align="center">
-  <img src="images/Resiude_1_2_TYR.png" alt="Atom Point Cloud" height="300">
+  <img src="images/Residue_1_2_TYR.png" alt="Atom Point Cloud" height="300">
   <img src="images/Residue_3_4_ASP_PRO.png" alt="All Atom Radius Graph" height="300">
 </p>
 
