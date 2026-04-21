@@ -35,6 +35,16 @@ A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i ass
 
 The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 matrix of  l=1 representations with multiplicity 13. These features represent the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is padded. The ordering of the 13 features requires a canoncial ordering of the heavy atoms.
 
+<p align="center">
+  <img src="images/TC_Representation.png" alt="Atom Point Cloud" height="300">
+  <img src="images/Residue_Mapping.png" alt="All Atom Radius Graph" height="300">
+</p>
+
+<p align="center">
+  <img src="images/Resiude_1_2_TYR.png" alt="Atom Point Cloud" height="300">
+  <img src="images/Residue_3_4_ASP_PRO.png" alt="All Atom Radius Graph" height="300">
+</p>
+
 (ToDo)
 
 Step 2: Building the NN modules
