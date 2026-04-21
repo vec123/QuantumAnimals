@@ -28,7 +28,6 @@ Aparently it is common to consider only the heavy atoms. Then a residual has max
   <img src="images/Heavy_Residue_Representation_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
 
-Step 2: Building the initial representation
 
 In EquiJump a protein is represented as a Tensor Cloud. 
 A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i associated to a 3D position P_i, in essence (V_i, P_i), where V_i is a tensor of irreducible representations with degree cutoff l_max.
@@ -38,7 +37,7 @@ The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its labe
 
 (ToDo)
 
-Step 3: Building the NN modules
+Step 2: Building the NN modules
 
 Three mechanisms need to be implemented.
 
@@ -50,7 +49,7 @@ the full model, combines Self-Interaction with Spatial Convolutions to output n 
 
 (ToDo)
 
-Step 4: 
+Step 3: 
 
 The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed focker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
 
@@ -59,7 +58,7 @@ The state of the SDE is X = (P,V), where P is a 3D position and V a tensor produ
 (ToDo)
 
 
-Step 5: 
+Step 4: 
 
 Validation by projecting the energy landscapes of molecular trajectories onto the 2 principal TiCA components.
 
