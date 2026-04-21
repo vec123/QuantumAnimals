@@ -52,7 +52,7 @@ the full model, combines Self-Interaction with Spatial Convolutions to output n 
 
 Step 4: 
 
-The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed fokker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
+The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed focker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
 
 (ToDo)
 
