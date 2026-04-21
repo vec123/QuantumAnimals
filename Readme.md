@@ -45,7 +45,7 @@ The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its labe
   <img src="images/Residue_3_4_ASP_PRO.png" alt="All Atom Radius Graph" height="300">
 </p>
 
-(ToDo)
+
 
 Step 2: Building the NN modules
 
@@ -55,7 +55,7 @@ The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-pr
 
 the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
 
-the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations for each residual. In this case n = 14.
+the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations for each residual.
 
 (ToDo)
 
