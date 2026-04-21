@@ -34,4 +34,31 @@ In Equijump a Protein is represented as a Tensor Cloud.
 A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i associated to a 3D position P_i, in essence {V_i, P_i}, where V_i is a tensor of irreducible representations with degree cutoff l_max.
 
 
-The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 matrix of  l=1 representations with multiplicity 13. A sensible initialization could be setting the l=1 representations to the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is set to 0. 
+The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 matrix of  l=1 representations with multiplicity 13. A sensible initialization could be setting the l=1 representations to the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is set to 0. The ordering of the 13 features requires a canoncial ordering of the heavy atoms.
+
+(ToDo)
+
+Step 3: Building the NN modules
+
+Three mechanisms need to be implemented.
+
+The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-products with itself) 
+
+the Spatial Convolution (essentially message passing between residual representations)
+
+the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations.
+
+(ToDo)
+
+Step 4: 
+
+The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed fokker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
+
+(ToDo)
+
+
+Step 5: 
+
+Validation by projecting the energy landscapes of molecular trajectories onto the 2 principal TiCA components.
+
+(ToDo)
