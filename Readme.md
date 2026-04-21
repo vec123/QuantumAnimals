@@ -28,3 +28,10 @@ Aparently it is common to consider only the heavy atoms. Then a residual has max
   <img src="images/Heavy_Residue_Representation_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
 
+Step 2: Building the initial representation
+
+In Equijump a Protein is represented as a Tensor Cloud. 
+A Tensor Cloud is a set of tensors V_i associated to a 3D position P_i, in essence {V_i, P_i}, where the degree l of the tensors is 0 < l < l_max.
+
+
+The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 tensor of 13 l=1 representations. A sensible initialization could be setting the l=1 representations to the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is set to 0. 
