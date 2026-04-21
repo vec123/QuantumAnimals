@@ -20,9 +20,11 @@ For Neural Networks a different data representation will be required. Numpy will
 
 
 This representation does not scale well. Other papers, such as EquiJump and Ophiuchus use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom. A protein can be understood as a one-dimensional sequence of these residue descriptions. This description scales better. The following image shows the residues and the corresponding atoms.
+Aparently it is common to consider only the heavy atoms. Then a residual has maximally 13 such connections.
+
 
 <p align="center">
-  <img src="images/Residue_Representation_Paraview.png" alt="Resiude Representation" height="300">
+  <img src="images/Residue_Representation_Paraview.png" alt="Atom Point Cloud" height="300">
+  <img src="images/Heavy_Residue_Representation_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
-
 

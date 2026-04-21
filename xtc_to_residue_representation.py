@@ -4,13 +4,9 @@ import os
 import argparse
 import pickle
 
-def convert_xtc_to_residue_numpy(pdb_path, xtc_path):
+def convert_xtc_to_residue_numpy(pdb_path, xtc_path, heavy_only=False):
     """
-    Converts xtc to residue-based representation:
-    Returns:
-        - res_data: List of frames, where each frame is a list of 
-                    (C_alpha_pos, relative_positions, res_label)
-        - max_d: Maximum diameter of the protein in the first frame.
+    Converts xtc to residue-based representation.
     """
     try:
         # 1. Load Trajectory
@@ -35,7 +31,6 @@ def convert_xtc_to_residue_numpy(pdb_path, xtc_path):
         max_d = np.max(dist_matrix)
 
         # 6. Build Residue Representation
-        # Structure: [frames][residues] -> {dict of features}
         traj_res_representation = []
         
         for f in range(len(coords_angstroms)):
@@ -44,13 +39,18 @@ def convert_xtc_to_residue_numpy(pdb_path, xtc_path):
                 # Find CA atom
                 ca_atoms = [a for a in res.atoms if a.name == 'CA']
                 if not ca_atoms:
-                    continue # Skip residues without CA (e.g. water, ions)
+                    continue 
                 
                 ca_idx = ca_atoms[0].index
                 p_alpha = coords_angstroms[f, ca_idx]
                 
-                # Get all atom positions for this residue
-                res_atom_indices = [a.index for a in res.atoms]
+                # Get atom indices for this residue
+                if heavy_only:
+                    # Filter out hydrogens (element symbol 'H')
+                    res_atom_indices = [a.index for a in res.atoms if a.element.symbol != 'H']
+                else:
+                    res_atom_indices = [a.index for a in res.atoms]
+                
                 res_coords = coords_angstroms[f, res_atom_indices]
                 
                 # Calculate relative positions P_i = P_atom - P_alpha
@@ -58,7 +58,7 @@ def convert_xtc_to_residue_numpy(pdb_path, xtc_path):
                 
                 frame_data.append({
                     'p_alpha': p_alpha,               # Shape (3,)
-                    'relative_positions': relative_p, # Shape (N_atoms_in_res, 3)
+                    'relative_positions': relative_p, # Shape (N_heavy_atoms_in_res, 3)
                     'label': res.name                 # e.g., 'ALA'
                 })
             traj_res_representation.append(frame_data)
@@ -76,6 +76,8 @@ def main():
     parser.add_argument("--xtc", type=str, required=True, help="XTC path relative to --dir")
     parser.add_argument("--pdb", type=str, required=True, help="PDB filename relative to --dir")
     parser.add_argument("--out", type=str, default="residue_trajs", help="Output directory")
+    # Added flag for heavy atoms only
+    parser.add_argument("--heavy_only", action="store_true", help="Only include heavy atoms in relative positions")
 
     args = parser.parse_args()
 
@@ -88,12 +90,12 @@ def main():
 
     os.makedirs(args.out, exist_ok=True)
 
-    # Use .pkl extension for structured residue data
-    clean_name = args.xtc.replace(os.sep, '_').replace('/', '_').replace('.xtc', '_res.pkl')
+    suffix = '_heavy_res.pkl' if args.heavy_only else '_res.pkl'
+    clean_name = args.xtc.replace(os.sep, '_').replace('/', '_').replace('.xtc', suffix)
     output_path = os.path.join(args.out, clean_name)
 
-    print(f"Processing: {args.xtc}...", end=" ", flush=True)
-    res_data, max_d = convert_xtc_to_residue_numpy(full_pdb_path, full_xtc_path)
+    print(f"Processing: {args.xtc} (Heavy only: {args.heavy_only})...", end=" ", flush=True)
+    res_data, max_d = convert_xtc_to_residue_numpy(full_pdb_path, full_xtc_path, heavy_only=args.heavy_only)
     
     if res_data is not None:
         with open(output_path, 'wb') as f:
