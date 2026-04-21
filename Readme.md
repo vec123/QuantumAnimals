@@ -30,8 +30,8 @@ Aparently it is common to consider only the heavy atoms. Then a residual has max
 
 Step 2: Building the initial representation
 
-In Equijump a Protein is represented as a Tensor Cloud. 
-A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i associated to a 3D position P_i, in essence {V_i, P_i}, where V_i is a tensor of irreducible representations with degree cutoff l_max.
+In EquiJump a protein is represented as a Tensor Cloud. 
+A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i associated to a 3D position P_i, in essence (V_i, P_i), where V_i is a tensor of irreducible representations with degree cutoff l_max.
 
 
 The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 matrix of  l=1 representations with multiplicity 13. A sensible initialization could be setting the l=1 representations to the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is set to 0. The ordering of the 13 features requires a canoncial ordering of the heavy atoms.
