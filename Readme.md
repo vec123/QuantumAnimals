@@ -9,13 +9,13 @@ Step 1: Understand the Data and choose a Representation
 
 Here a snapshot of the molecular dynamics simulation (see the notebook script):
 <p align="center">
-  <img src="images/mol_traj_visualization.png" alt="MD Visualization">
+  <img src="images/representation/mol_traj_visualization.png" alt="MD Visualization">
 </p>
 
 For Neural Networks a different data representation will be required. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausibility along each transformation. A possibility would be to use graph neural networks on an all-atom radius graph. The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
 <p align="center">
-  <img src="images/Numpy_Points_Paraview.png" alt="Atom Point Cloud" height="300">
-  <img src="images/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" height="300">
+  <img src="images/representation/Numpy_Points_Paraview.png" alt="Atom Point Cloud" height="300">
+  <img src="images/representation/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
 
 
@@ -24,8 +24,8 @@ Aparently it is common to consider only the heavy atoms. Then a residual has max
 
 
 <p align="center">
-  <img src="images/Residue_Representation_Paraview.png" alt="Atom Point Cloud" height="300">
-  <img src="images/Heavy_Residue_Representation_Paraview.png" alt="All Atom Radius Graph" height="300">
+  <img src="images/representation/Residue_Representation_Paraview.png" alt="Atom Point Cloud" height="300">
+  <img src="images/representation/Heavy_Residue_Representation_Paraview.png" alt="All Atom Radius Graph" height="300">
 </p>
 
 
@@ -36,13 +36,13 @@ A Tensor Cloud is set, whose elements are tuples. Each tuple is a tensor V_i ass
 The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its label, P_i being the position of the C_alpha atom and V_i being a 13x3 matrix of  l=1 representations with multiplicity 13. These features represent the relative distances of the heavy atoms. If a residual has less than 13 heavy atoms, the representation is padded. The ordering of the 13 features requires a canoncial ordering of the heavy atoms.
 
 <p align="center">
-  <img src="images/TC_Representation.png" alt="Atom Point Cloud" height="300">
-  <img src="images/Residue_Mapping.png" alt="All Atom Radius Graph" height="300">
+  <img src="images/representation/TC_Representation.png" alt="Atom Point Cloud" height="300">
+  <img src="images/representation/Residue_Mapping.png" alt="All Atom Radius Graph" height="300">
 </p>
 
 <p align="center">
-  <img src="images/Residue_1_2_TYR.png" alt="Atom Point Cloud" height="300">
-  <img src="images/Residue_3_4_ASP_PRO.png" alt="All Atom Radius Graph" height="300">
+  <img src="images/representation/Residue_1_2_TYR.png" alt="Atom Point Cloud" height="300">
+  <img src="images/representation/Residue_3_4_ASP_PRO.png" alt="All Atom Radius Graph" height="300">
 </p>
 
 
@@ -54,7 +54,10 @@ Three mechanisms need to be implemented.
 The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-products with itself) 
 
 the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
-
+<p align="center">
+  <img src="images/computing/SelfInteraction_pseudocode.png" alt="SelfInteraction Pseudocode" height="300">
+  <img src="images/representation/SelfInteraction.png" alt="SelfInteraction Code" height="300">
+</p>
 the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations for each residual.
 
 (ToDo)
