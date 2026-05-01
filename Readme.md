@@ -52,11 +52,14 @@ Step 2: Building the NN modules
 Three mechanisms need to be implemented.
 
 The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-products with itself) 
-
-the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
 <p align="center">
   <img src="images/computing/SelfInteraction_pseudocode.png" alt="SelfInteraction Pseudocode" height="300">
   <img src="images/computing/SelfInteraction.png" alt="SelfInteraction Code" height="300">
+</p>
+the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
+<p align="center">
+  <img src="images/computing/SpatialConvolution_pseudocode.png" alt="SpatialConvolution Pseudocode" height="300">
+  <img src="images/computing/SpatialConvolution.png" alt="SpatialConvolution Code" height="300">
 </p>
 the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations for each residual.
 

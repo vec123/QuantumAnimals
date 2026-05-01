@@ -37,7 +37,7 @@ class SelfInteraction(hk.Module):
     
 class SpatialConvolution(hk.Module):
     """ Spatial Convolution"""
-    def __init__(self, target_irreps, denominator, sh_lmax=3, name=None):
+    def __init__(self, target_irreps, denominator, sh_lmax=4, name=None):
         super().__init__(name=name)
         self.target_irreps = e3nn.Irreps(target_irreps)
         self.denominator = denominator
@@ -45,22 +45,29 @@ class SpatialConvolution(hk.Module):
 
     def __call__(self, graphs, positions):
         def update_edge_fn(edge_features, sender_features, receiver_features, globals):
-            #  kNN is handled by your jraph graph structure
+            #  kNN is handled by jraph radius graph structure
             rel_pos = positions[graphs.receivers] - positions[graphs.senders] # \tilde{P} - P_i
             dist = jnp.linalg.norm(rel_pos, axis=-1, keepdims=True)
             
             # Embedding (R) and Spherical Harmonics (Y)
-            # We use a simple radial basis for the MLP part of step 4
+            # simple radial basis for the MLP part
             R = e3nn.soft_one_hot_linspace(dist, start=0.0, end=2.0, number=8, basis='gaussian')
             Y = e3nn.spherical_harmonics(list(range(1, self.sh_lmax+1)), rel_pos, True)
             
-            # \tilde{V} \otimes Y gated by MLP(R)
-            # In e3nn, this is often a 'Linear' followed by TP, or a gated TP
-            messages = e3nn.tensor_product(sender_features, Y)
-            
-            # Use the radial embedding R to scale the messages (MLP equivalent)
-            radial_weights = hk.nets.MLP([16, messages.irreps.num_irreps])(R)
-            return messages * radial_weights
+            # \tilde{V} \otimes Y 
+            tp_message = e3nn.tensor_product(sender_features, Y).regroup()
+            geometric_feature = e3nn.haiku.Linear(tp_message.irreps, name="msg_linear")(tp_message)
+
+            # Gate
+            v_l0k = sender_features.filtered("0e").array
+            v_l0= receiver_features.filtered("0e").array
+            combined_scalars = jnp.concatenate([R,v_l0k,  v_l0], axis=-1)
+            gate = hk.nets.MLP(
+                [16, geometric_feature.irreps.num_irreps], 
+                name="equiv_gate_mlp"
+            )(combined_scalars)
+
+            return gate * geometric_feature
 
         def update_node_fn(nodes, senders, receivers, globals):
             # V = Linear(V + 1/k * sum(V_tilde))
