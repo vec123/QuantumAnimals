@@ -1,3 +1,5 @@
+import json
+
 RESIDUE_ATOM_MAPS = {
     'ALA': ['N', 'C', 'O', 'CB', 'OXT'],
     'ARG': ['N', 'C', 'O', 'CB', 'CG', 'CD', 'NE', 'CZ', 'NH1', 'NH2', 'OXT'],
@@ -21,4 +23,17 @@ RESIDUE_ATOM_MAPS = {
     'VAL': ['N', 'C', 'O', 'CB', 'CG1', 'CG2', 'OXT']
 }
 
-RES_LIST = sorted(RESIDUE_ATOM_MAPS.keys())
+
+class AtomRegistry:
+    def __init__(self, config_path: str = None):
+        if config_path:
+            with open(config_path, 'r') as f:
+                self.map = json.load(f)
+        else:
+            # Default to your RESIDUE_ATOM_MAPS
+            self.map = RESIDUE_ATOM_MAPS
+            
+        self.encoder = {res: i for i, res in enumerate(sorted(self.map.keys()))}
+
+    def get_res_id(self, res_name: str) -> int:
+        return self.encoder.get(res_name, -1)

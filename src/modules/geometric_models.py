@@ -49,11 +49,11 @@ class SpatialConvolution(hk.Module):
         self.sh_lmax = sh_lmax
         self.verbose = verbose
 
-    def __call__(self, graph: jraph.GraphsTuple, positions: jnp.ndarray):
+    def __call__(self, graph: jraph.GraphsTuple, positions: e3nn.IrrepsArray):
 
         def update_edge_fn(edge_features, sender_features, receiver_features, globals):
             # rel_pos = P_alpha_j - P_alpha_i
-            rel_pos = positions[graph.receivers] - positions[graph.senders]
+            rel_pos = positions.array[graph.receivers] - positions.array[graph.senders]
             rel_pos = e3nn.IrrepsArray("1x1o", rel_pos)
             dist = e3nn.norm(rel_pos)
             

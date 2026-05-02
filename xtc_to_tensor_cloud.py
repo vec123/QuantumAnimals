@@ -33,6 +33,8 @@ RES_MAP = {res: i for i, res in enumerate(sorted(RESIDUE_ATOM_MAPS.keys()))}
 def convert_to_tensor_cloud(pdb_path, xtc_path, max_v_slots=13):
     try:
         t = md.load(xtc_path, top=pdb_path)
+        selection = t.topology.select("protein")
+        t = t.atom_slice(selection)
         t.center_coordinates()
         coords = t.xyz * 10.0 # Angstroms
         
@@ -46,8 +48,11 @@ def convert_to_tensor_cloud(pdb_path, xtc_path, max_v_slots=13):
         Mask_i = np.zeros((n_residues, max_v_slots), dtype=bool)
 
         for r_idx, res in enumerate(topology.residues):
-            R_i[r_idx] = RES_MAP.get(res.name, -1)
-            
+            val = RES_MAP.get(res.name, -1)
+            if val == -1:
+                print(f"Index {r_idx}: Found unknown residue name '{res.name}'")
+            R_i[r_idx] = val
+                    
             ca_atoms = [a for a in res.atoms if a.name == 'CA']
             if not ca_atoms: continue
             ca_idx = ca_atoms[0].index
