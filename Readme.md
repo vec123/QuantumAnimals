@@ -49,7 +49,7 @@ The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its labe
 
 Step 2: Building the NN modules
 
-Three mechanisms need to be implemented.
+Three mechanisms are implemented.
 
 The Self-Interaction Mechanism (updates the tensor cloud of each residual independently by performing tensor-products with its own features) 
 <p align="center">
@@ -63,7 +63,7 @@ the full model, combines Self-Interaction with Spatial Convolutions to outputs t
 <p align="center">
   <img src="images/computing/EquiJumpDeepNetwork_pseudocode.png" alt="SpatialConvolution Pseudocode" height="300">
 </p>
-This full network will be the backbone for the training. It receives a tensor-cloud as input and outputs a tensor-cloud.
+This full network will be the backbone for the training. It receives a tensor-cloud as input and outputs the specified geometric irreps.
 The irreps of each node can be specified independently. 
 
 This enables the implementation of a specific information flow in which one computes
