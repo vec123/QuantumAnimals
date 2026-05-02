@@ -5,3 +5,4 @@ numpy
 jupyter 
 ipykernel
 pyevtk
+dotenv
