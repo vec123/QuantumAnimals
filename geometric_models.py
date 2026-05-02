@@ -36,7 +36,7 @@ class SelfInteraction(hk.Module):
         # Residual-style update projection
         v_out = e3nn.haiku.Linear(self.target_irreps)(v_intermediate * gate)
         if self.verbose:
-                print("§§§§§§§§§ SelfInteraction §§§§§§§§§")
+                print("-------------- Finished: SelfInteraction --------------")
                 print("in.irreps: ", node_features.irreps)
                 print("v_intermediate.irreps: ", v_intermediate.irreps)
                 print("v_out.irreps: ", v_out.irreps)
@@ -100,7 +100,7 @@ class SpatialConvolution(hk.Module):
           
             out = v_residual + normalized_messages
             if self.verbose:
-                print("§§§§§§§§§ SpatialConvolution §§§§§§§§§")
+                print("-------------- Finished: SpatialConvolution --------------")
                 print("in.irreps: ",v_current.irreps)
                 print("msg.irreps: ", normalized_messages.irreps)
                 print("out.irreps: ", out.irreps)
@@ -134,7 +134,7 @@ class EquiJumpLayer(hk.Module):
         h_norm =res
    
         if self.verbose:
-            print("§§§§§§§§§ EquiJumpLayer §§§§§§§§§")
+            print("-------------- Finished: EquiJumpLayer --------------")
             print("in.irreps : ", in_irreps.irreps)
             print("msg.irreps : ", msg.irreps)
             print("out.irreps: ", h_norm.irreps)
@@ -153,6 +153,7 @@ class EquiJumpDeepNetwork(hk.Module):
 
         self.distance_cutoff = distance_cutoff
 
+        self.verbose = verbose
     def __call__(self, node_features: e3nn.IrrepsArray, positions: jnp.ndarray):
 
         # --- Internal Graph Construction ---
@@ -172,7 +173,7 @@ class EquiJumpDeepNetwork(hk.Module):
             n_edge=jnp.array([len(senders)]),
             globals=None
         )
-        print("made graph:")
+
         # --- Forward Pass ---
         # Initial Embedding
         h_nodes = e3nn.haiku.Linear(self.input_irreps, name="init_embed")(h_jraph.nodes)
@@ -181,7 +182,7 @@ class EquiJumpDeepNetwork(hk.Module):
         history = [h.nodes]
 
         # First Self-Interaction
-        h_0_nodes = SelfInteraction(target_irreps=self.internal_irreps)(h.nodes)
+        h_0_nodes = SelfInteraction(target_irreps=self.internal_irreps, verbose = self.verbose)(h.nodes)
         history.append(h_0_nodes)
         h = h._replace(nodes=h_0_nodes)
 
@@ -189,7 +190,8 @@ class EquiJumpDeepNetwork(hk.Module):
         for l in range(self.L):
             h_l_nodes = EquiJumpLayer(
                 target_irreps=self.internal_irreps, 
-                name=f"equijump_layer_{l}"
+                name=f"equijump_layer_{l}",
+                verbose = self.verbose
             )(h, positions)
             history.append(h_l_nodes)
             h = h._replace(nodes=h_l_nodes)
@@ -198,6 +200,6 @@ class EquiJumpDeepNetwork(hk.Module):
         h_agg_nodes = e3nn.concatenate(history, axis=-1)
         h_agg_nodes = e3nn.haiku.Linear(self.internal_irreps, name="agg_linear")(h_agg_nodes)
         
-        h_out_nodes = SelfInteraction(target_irreps=self.output_irreps)(h_agg_nodes)
+        h_out_nodes = SelfInteraction(target_irreps=self.output_irreps,  verbose = self.verbose)(h_agg_nodes)
 
         return h_out_nodes

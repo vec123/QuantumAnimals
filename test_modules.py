@@ -49,7 +49,7 @@ sample_graph, sample_pos = prepare_data_for_model(data)
 
 # STEP Model Setup
 output_irreps =  "14x1e"
-input_irreps = "32x0e + 16x1o"
+input_irreps = "1x0e + 14x1o"
 internal_irreps = "32x0e +  124x1o + 10x2e"
 output_irreps="16x0e"
 model_def = lambda g, p: EquiJumpDeepNetwork(L=2,

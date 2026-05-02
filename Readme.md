@@ -82,6 +82,14 @@ This enables the implementation of a specific information flow in which one comp
   <img src="images/computing/EquiJump_full.png" alt="SpatialConvolution Pseudocode" height="300">>
 </p>
 
+Lets us test the information flow:
+<p align="center">
+  <img src="images/computing/module_test_1.png" alt="Atom Point Cloud" height="300">
+  <img src="images/computing/module_test_2.png" alt="All Atom Radius Graph" height="300">
+</p>
+The input was a scalar and 14 3d vectors for each residual and the output was 14 3d vectord for each residual. 
+The intermediate information flow consists in gated equivariant updates with irreps up to order 3. 
+
 Step 3: 
 
 The training, based on stochastic interpolants, interprets the model output as drift and scores of an end-point fixed focker-plank density evolution. By choosing the interpolant (here a linear interpolant) between endpoints, a differentiable objective can be formulated for both quantities. 
