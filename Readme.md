@@ -51,17 +51,29 @@ Step 2: Building the NN modules
 
 Three mechanisms need to be implemented.
 
-The Self-Interaction Mechanism (updates the tensor cloud by performing tensor-products with itself) 
+The Self-Interaction Mechanism (updates the tensor cloud of each residual independently by performing tensor-products with its own features) 
 <p align="center">
   <img src="images/computing/SelfInteraction_pseudocode.png" alt="SelfInteraction Pseudocode" height="300">
-  <img src="images/computing/SelfInteraction.png" alt="SelfInteraction Code" height="300">
 </p>
 the Spatial Convolution (essentially message passing between residual representations to update the i-th residual)
 <p align="center">
   <img src="images/computing/SpatialConvolution_pseudocode.png" alt="SpatialConvolution Pseudocode" height="300">
-  <img src="images/computing/SpatialConvolution.png" alt="SpatialConvolution Code" height="300">
 </p>
-the full model, combines Self-Interaction with Spatial Convolutions to output n l1 representations for each residual.
+the full model, combines Self-Interaction with Spatial Convolutions to outputs the target irrep arrays for each residual (node).
+<p align="center">
+  <img src="images/computing/EquiJumpDeepNetwork_pseudocode.png" alt="SpatialConvolution Pseudocode" height="300">
+</p>
+This full network will be the backbone for the training. It receives a tensor-cloud as input and outputs a tensor-cloud.
+The irreps of each node can be specified independently. 
+
+This enables the implementation of a specific information flow in which one computes
+1: latent geometric features, conditioned on a scalar field of one-hot encodings related to the the residual label (i.e. the residual field) and the tensor cloud at time t initialized with V_ij as relative distances from the C_alpha atom
+
+2: The output features can be added to the tensor cloud at time tau, which is obtained by stochastic interpolation. Additionally, a scalar field representing the time tau is added. This is the input tensor cloud to the following four networks, each tasked with the approximation of the position and feature drift and noise respectively.
+
+<p align="center">
+  <img src="images/computing/EquiJump_full.png" alt="SpatialConvolution Pseudocode" height="300">>
+</p>
 
 Step 3: 
 

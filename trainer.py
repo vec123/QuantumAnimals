@@ -97,32 +97,42 @@ class EquiJumpTrainer():
         return (P_tau, V_tau), (P_z_tau, V_z_tau), (I_vel_P, I_vel_V), tau
     
     def loss_fn(self, params, key, batch):
-        """
-        batch: dict containing 'X_init' and 'X_end' 
-        Each X is a tuple (P, V)
-        """
-        X_init = batch['X_init']
-        X_end = batch['X_end']
+        X_init = batch['X_init'] # Xt in paper
+        X_end = batch['X_end']   # Xt+1 in paper
+        R = batch['residues']    # Protein sequence R
         
-        # 1. Get the interpolated state and targets
+        # 1. Interpolate
         X_tau, z_tau, I_vel_target, tau = self.linear_interpolate(
             key, X_init, X_end, self.cosine_gamma_schedule
         )
         
-        #  Forward pass through your drift models
-        
-        # Predicting Drift for P and V
-        # Assuming your modules are stored in a way that we can call them:
-        # e.g., self.V_drift.apply(params['V_drift'], None, graph, X_tau)
-        
-        pred_I_vel_P = self.P_drift.apply(params['P_drift'], X_tau, tau)
-        pred_I_vel_V = self.V_drift.apply(params['V_drift'], X_tau, tau)
+        #  Conditioner: fcond(R, Xt)
+        # Note: Independent of tau for efficiency
+        X_tilde = self.conditioning.apply(params['conditioning'], R, X_init)
 
-        # 3. Compute MSE Loss
-        loss_P = jnp.mean(jnp.square(pred_I_vel_P - I_vel_target[0]))
-        loss_V = jnp.mean(jnp.square(pred_I_vel_V - I_vel_target[1]))
+        # 3. Predict Headers: take (X_tilde, X_tau, tau)
+        # Drift headers b_hat
+        b_V = self.V_drift.apply(params['V_drift'], X_tilde, X_tau, tau)
+        b_P = self.P_drift.apply(params['P_drift'], X_tilde, X_tau, tau)
         
-        return loss_P + loss_V
+        # Noise headers eta_hat
+        eta_V = self.V_noise.apply(params['V_noise'], X_tilde, X_tau, tau)
+        eta_P = self.P_noise.apply(params['P_noise'], X_tilde, X_tau, tau)
+
+        # 4. Compute Loss per Algorithm 1, Line 9
+        # Objective: 0.5 * ||b||^2 - b · TargetVel + 0.5 * ||eta||^2 - eta · Z
+        
+        # Drift Loss (Vector dot products summed over nodes)
+        # TargetVel is (I_vel_P, I_vel_V)
+        loss_drift_P = 0.5 * jnp.mean(jnp.sum(b_P**2, axis=-1)) - jnp.mean(jnp.sum(b_P * I_vel_target[0], axis=-1))
+        loss_drift_V = 0.5 * jnp.mean(jnp.sum(b_V**2, axis=(-1, -2))) - jnp.mean(jnp.sum(b_V * I_vel_target[1], axis=(-1, -2)))
+        
+        # Noise Loss
+        # z_tau is (P_z_tau, V_z_tau)
+        loss_noise_P = 0.5 * jnp.mean(jnp.sum(eta_P**2, axis=-1)) - jnp.mean(jnp.sum(eta_P * z_tau[0], axis=-1))
+        loss_noise_V = 0.5 * jnp.mean(jnp.sum(eta_V**2, axis=(-1, -2))) - jnp.mean(jnp.sum(eta_V * z_tau[1], axis=(-1, -2)))
+
+        return loss_drift_P + loss_drift_V + loss_noise_P + loss_noise_V
     
     @jax.jit
     def gradient_step(self, params, opt_state, key, batch):
