@@ -6,7 +6,7 @@ import jax.numpy as jnp
 
 class EquiJumpTrainer():
 
-    def init_module( self,
+    def init_module(self,
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
                     output_irreps =  "14x1e" ):
@@ -24,31 +24,31 @@ class EquiJumpTrainer():
     
     def init_modules(self):
 
-        # Tensor Cloud + Residue Field to Tensor Cloud i.e. 1e (P_i) + 13x1e (V_ij) (per node P_i)
+        # Tensor Cloud + Residue Field -> Tensor Cloud i.e. 1e (P_i) + 13x1e (V_ij) (per node P_i)
         conditioning = self.init_module(
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
                     output_irreps =  "32x0e + 16x1o",)
         
-        # Tensor Cloud cond + Tensor Cloud interp to dV, i.e. 13x1e (dV_ij) (per node P_i)
+        # tau scalar +  Tensor Cloud cond + Tensor Cloud interp -> dV, i.e. 13x1e (dV_ij) (per node P_i)
         V_drift = self.init_module(
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
                     output_irreps =  "32x0e + 16x1o",)
         
-        # Tensor Cloud cond + Tensor Cloud interp to dP, i.e. 1e  (dP_i) (per node  P_i)
+        # tau scalar + Tensor Cloud cond + Tensor Cloud interp -> dP, i.e. 1e  (dP_i) (per node  P_i)
         P_drift = self.init_module(
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
                     output_irreps =  "32x0e + 16x1o",)
         
-        # Tensor Cloud cond + Tensor Cloud interp to dV, i.e. 13x1e (dV_ij) (per node P_i)
+        # tau scalar + Tensor Cloud cond + Tensor Cloud interp -> dV, i.e. 13x1e (dV_ij) (per node P_i)
         V_noise = self.init_module(
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
                     output_irreps =  "32x0e + 16x1o",)
         
-        # Tensor Cloud cond + Tensor Cloud interp to dP, i.e. 1e  (dP_i) (per node  P_i)
+        # tau scalar +  Tensor Cloud cond + Tensor Cloud interp -> dP, i.e. 1e  (dP_i) (per node  P_i)
         P_noise = self.init_module(
                     input_irreps = "32x0e + 16x1o",  
                     internal_irreps = "32x0e +  124x1o + 10x2e",
@@ -109,9 +109,7 @@ class EquiJumpTrainer():
             key, X_init, X_end, self.cosine_gamma_schedule
         )
         
-        # 2. Forward pass through your drift models
-        # Note: You need to decide how to pass tau to your EquiJumpDeepNetwork.
-        # Usually, tau is embedded and concatenated or added to the input.
+        #  Forward pass through your drift models
         
         # Predicting Drift for P and V
         # Assuming your modules are stored in a way that we can call them:
