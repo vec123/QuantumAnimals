@@ -17,22 +17,8 @@ Here a snapshot of the molecular dynamics simulation (see the notebook script):
 </p>
 One can see bonds and atom types as well as arrows representing the backbone. 
 Any chemist beyond high-school will admit that these drawn edges, i.e. the bonds, are not really physical. 
-Instead they serve as visual anchors for the electronic forces that arise from the quantum-chemical Hamiltonian. 
-Solving for the ground-state wave-function of this hamiltonian determines the energy landscape, and thus, by the Hellmann–Feynman theorem the forces on all the particles.
-In addition, it also determines the electronic density, which in turn, by the Kohn-Sham Theorem, determines all properties of the Hamiltonian system.
-The forces that play a role in such a system are electronic attraction and repulsions through densities; the kinetic contributions to the pressure and stress tensors through the momentum of the nuclear and electronic wavepackets; statistical correlations through Fermi-statistics and the Pauli exclusion principle (often called exchange effects); and correlated motions arising from the instantaneous Coulomb interactions that are generally not captured by independent-particle or mean-field approximations..
-Due to the size of the atomic system protein dynamics simulations tend to classical force fields which are in turn derived form quantum chemical approximations.
-Recently, geometric feature based graph neural networks have shown great promise in machine learning these force fields from quantum chemical ab-initio datasets. 
-However, contrary to protein folding, the dynamics considered in such datasets are on a much smaller time-scale.
 <br>
-Instead of fitting to quantum-chemical ab-initio simulations, EquiJump applies the principles of geometric deep learning to molecular dynamics datasets and shows that one can learn the dynamics of large proteins through coarse-grained representations and geometric features. It combines two topics that are fascinating to me personally: Equivariant Deep Learning and Stochastic Interpolants, Schrödinger Bridges or end-point fixed Diffusion. The last three concepts are largely analogous and refer to different perspectives on the same Problem.
-<br>
-Going back to the raw data. The Hamiltonian is fully determined by the potential and kinetic energy of all wavepackets. 
-In the Born-Oppenheimer approximation (which your MD snapshot likely assumes), one usually treats the nuclei as classical point particles. While the electrons have kinetic energy and momentum integrated into the Hamiltonian, the forces acting on the atoms are typically calculated under the assumption that the electrons are always in their ground-state. In essence, the large difference in time-scales between the motions of atoms and electrons, one will consider that the electrons instantaneously fall into their ground state as soon as an atom move. Thus, the energy landscape is determined by the positions of all atoms. This abiabatic approximation tends to be baked into the classical force field. Keep in mind that it fails for non-adiabatic processes, such as photosynthesis.
-<br>
-Equally, EquiJump assumes that the molecular dynamics are determined by the positions of all atoms. Such a problem is already complex enough, considering that a protein can have several thousands, potentially all interacting with each other and already the three-body problem is highly chaotic, much more so the many-body problem.
-<br>
-The atom positions are easily represented as a labeled point cloud. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausibility along each transformation. A possibility would be to use graph neural networks on an all-atom radius graph. The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
+Let us assume that the molecular dynamics are determined by the positions of all atoms. Then the aom positions are easily represented as a labeled point cloud. Numpy will serve as intermediary since it is relatively slim and easily integrated into pytorch or jax computations. Paraview will serve as visualization platform to ensure plausibility along each transformation. A possibility would be to use graph neural networks on an all-atom radius graph. The following image shows all atoms as a point cloud and the corresponding  graph with a five Angstrom radius:
 <p align="center">
   <img src="images/representation/Numpy_Points_Paraview.png" alt="Atom Point Cloud" height="300">
   <img src="images/representation/All_Atom_Graph_Paraview.png" alt="All Atom Radius Graph" height="300">
