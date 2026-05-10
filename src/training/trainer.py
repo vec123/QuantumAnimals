@@ -1,152 +1,136 @@
-from geometric_models import EquiJumpDeepNetwork
-import haiku as hk
 import jax
-import optax
 import jax.numpy as jnp
+import haiku as hk
+import e3nn_jax as e3nn
+import optax
+from functools import partial
 
-class EquiJumpTrainer():
+from src.training.interpolants import linear_interpolant, sine_noise_schedule
+from src.modules.geometric_models import EquiJumpDeepNetwork
 
-    def init_module(self,
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "14x1e" ):
+class EquiJumpTrainer:
+    def __init__(
+            self,
+              latent_irreps, 
+              input_irreps, 
+              target_irreps,
+              interpolant_fn=linear_interpolant, 
+              noise_fn=sine_noise_schedule, 
+                lr=1e-4
+                 ):
+        self.latent_irreps = e3nn.Irreps(latent_irreps)
+        self.input_irreps = e3nn.Irreps(input_irreps)
+        self.target_irreps = e3nn.Irreps(target_irreps)
+        self.lr = lr
+
+        # Define the network transformations
+        self.interpolant_fn = interpolant_fn
+        self.noise_fn = noise_fn
+
+        # Define the network transformations
+        self._cond_transform = hk.without_apply_rng(hk.transform(self._cond_fn))
+        self._header_transform = hk.without_apply_rng(hk.transform(self._header_fn))
+
+
+    def _cond_fn(self, residues, x_init_pos, x_init_feat):
+        """fcond(R, Xt) -> Latent Tensor Cloud"""
+        # residues: 21x0e, x_init_pos: 1o, x_init_feat: 13x1o
+        node_input = e3nn.concatenate([residues, x_init_feat], axis=-1)
+        return EquiJumpDeepNetwork(
+            L=2, 
+            internal_irreps="32x0e + 16x1o",
+            output_irreps=self.latent_irreps,
+            name="conditioner"
+        )(node_input, x_init_pos)
+
+    def _header_fn(self, x_tilde, x_tau_pos, x_tau_feat, tau):
+        """Header(X_tilde, X_tau, tau) -> Drift or Noise"""
+        # Concatenate latent context, current noisy features, and time
+        tau_array = e3nn.IrrepsArray("1x0e", jnp.broadcast_to(tau, (x_tau_pos.shape[0], 1)))
+        node_input = e3nn.concatenate([x_tilde, x_tau_feat, tau_array], axis=-1)
         
-        output_irreps =  output_irreps
-        input_irreps = input_irreps
-        internal_irreps = internal_irreps
+        return EquiJumpDeepNetwork(
+            L=2,
+            internal_irreps="32x0e + 16x1o",
+            output_irreps=self.target_irreps,
+            name="header"
+        )(node_input, x_tau_pos)
 
-        model_def = lambda g, p: EquiJumpDeepNetwork(L=2,
-                                                    input_irreps = input_irreps,
-                                                    internal_irreps = internal_irreps,
-                                                    output_irreps = output_irreps)(g, p)
+    def init_params(self, key, batch):
+        """Initialize parameters for all 5 sub-networks."""
+        k1, k2, k3, k4, k5 = jax.random.split(key, 5)
+        R, (P, V) = batch['residues'], batch['X_init']
+        tau = jnp.array([0.5])
 
-        model = hk.without_apply_rng(hk.transform(model_def))
-    
-    def init_modules(self):
+        params = {}
+        # 1. Conditioner
+        params['f_cond'] = self._cond_transform.init(k1, R, P, V)
+        x_tilde = self._cond_transform.apply(params['f_cond'], R, P, V)
 
-        # Tensor Cloud + Residue Field -> Tensor Cloud i.e. 1e (P_i) + 13x1e (V_ij) (per node P_i)
-        conditioning = self.init_module(
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "32x0e + 16x1o",)
+        # 2. Headers (Drift and Noise)
+        params['b_V'] = self._header_transform.init(k2, x_tilde, P, V, tau)
+        params['b_P'] = self._header_transform.init(k3, x_tilde, P, V, tau)
+        params['eta_V'] = self._header_transform.init(k4, x_tilde, P, V, tau)
+        params['eta_P'] = self._header_transform.init(k5, x_tilde, P, V, tau)
         
-        # tau scalar +  Tensor Cloud cond + Tensor Cloud interp -> dV, i.e. 13x1e (dV_ij) (per node P_i)
-        V_drift = self.init_module(
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "32x0e + 16x1o",)
-        
-        # tau scalar + Tensor Cloud cond + Tensor Cloud interp -> dP, i.e. 1e  (dP_i) (per node  P_i)
-        P_drift = self.init_module(
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "32x0e + 16x1o",)
-        
-        # tau scalar + Tensor Cloud cond + Tensor Cloud interp -> dV, i.e. 13x1e (dV_ij) (per node P_i)
-        V_noise = self.init_module(
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "32x0e + 16x1o",)
-        
-        # tau scalar +  Tensor Cloud cond + Tensor Cloud interp -> dP, i.e. 1e  (dP_i) (per node  P_i)
-        P_noise = self.init_module(
-                    input_irreps = "32x0e + 16x1o",  
-                    internal_irreps = "32x0e +  124x1o + 10x2e",
-                    output_irreps =  "32x0e + 16x1o",)
-        
-        return conditioning, V_drift, P_drift, V_noise, P_noise
-    
-    def cosine_gamma_schedule(self, tau):
-        # g(tau) = sin(pi * tau)
-        g = jnp.sin(jnp.pi * tau)
-        g_dot = jnp.pi * jnp.cos(jnp.pi * tau)
-        return g, g_dot
+        return params
 
-    def linear_interpolate(self,key, X_t_init, X_t_end, gamma_fn):
-        # computes the end-point fixed stochastic interpolant between two states
-        # as well as the interpolant derivate at that time
-        """
-        X_t_init/end are tuples: (P, V) = the Tensor Cloud
-        P: (num_nodes, 3) - Positions (Irreps "1o")
-        V: (num_nodes, 13, 3) - Vector features (Irreps "13x1o")
-        """
-        
-        k1, k2, k3 = jax.random.split(key, 3)
-        # uniform between 0 and 1 with small epsilon offset
-        tau = jax.random.uniform(k1, (1,)) * (1 - 2e-5) + 1e-5
-
-        # sampled from isotropic gaussian with dim num_nodes,3
-        P_z_tau = jax.random.normal(k2, X_t_init[0].shape)
-        V_z_tau = jax.random.normal(k3, X_t_init[1].shape)
-
-
-        # P_init and P end have shape (num_nodes, 3)
-        # V_init and V_end have shape (num_nodes,13, 3)
-        P_init, V_init = X_t_init
-        P_end, V_end = X_t_end
-       
-        g_tau, g_dot_tau = gamma_fn(tau)
-        
-        # stochastic interpolant state
-        P_tau = (1 - tau) * P_init + tau * P_end + g_tau * P_z_tau
-        V_tau = (1 - tau) * V_init + tau * V_end + g_tau * V_z_tau
-
-        I_vel_P = (P_end - P_init) + g_dot_tau * P_z_tau
-        I_vel_V = (V_end - V_init) + g_dot_tau * V_z_tau
-
-        return (P_tau, V_tau), (P_z_tau, V_z_tau), (I_vel_P, I_vel_V), tau
-    
     def loss_fn(self, params, key, batch):
-        X_init = batch['X_init'] # Xt in paper
-        X_end = batch['X_end']   # Xt+1 in paper
-        R = batch['residues']    # Protein sequence R
-        
-        # 1. Interpolate
-        X_tau, z_tau, I_vel_target, tau = self.linear_interpolate(
-            key, X_init, X_end, self.cosine_gamma_schedule
-        )
-        
-        #  Conditioner: fcond(R, Xt)
-        # Note: Independent of tau for efficiency
-        X_tilde = self.conditioning.apply(params['conditioning'], R, X_init)
+        R = batch['residues']
+        P_0, V_0 = batch['X_init'] # x0
+        P_1, V_1 = batch['X_end']  # x1
 
-        # 3. Predict Headers: take (X_tilde, X_tau, tau)
-        # Drift headers b_hat
-        b_V = self.V_drift.apply(params['V_drift'], X_tilde, X_tau, tau)
-        b_P = self.P_drift.apply(params['P_drift'], X_tilde, X_tau, tau)
+        # Sample Time and Noise
+        k_tau, k_z = jax.random.split(key)
+        tau = jax.random.uniform(k_tau, (1,))
         
-        # Noise headers eta_hat
-        eta_V = self.V_noise.apply(params['V_noise'], X_tilde, X_tau, tau)
-        eta_P = self.P_noise.apply(params['P_noise'], X_tilde, X_tau, tau)
+        # Standard Normal Noise Z
+        z_p = jax.random.normal(k_z, P_0.shape)
+        z_v = jax.random.normal(k_z, V_0.shape)
 
-        # 4. Compute Loss per Algorithm 1, Line 9
-        # Objective: 0.5 * ||b||^2 - b · TargetVel + 0.5 * ||eta||^2 - eta · Z
+        # Compute Interpolant and Schedule
+        # I_p is the value, dot_I_p is the derivative w.r.t tau
+        I_p, dot_I_p = self.interpolant_fn(P_0, P_1, tau)
+        I_v, dot_I_v = self.interpolant_fn(V_0, V_1, tau)
         
-        # Drift Loss (Vector dot products summed over nodes)
-        # TargetVel is (I_vel_P, I_vel_V)
-        loss_drift_P = 0.5 * jnp.mean(jnp.sum(b_P**2, axis=-1)) - jnp.mean(jnp.sum(b_P * I_vel_target[0], axis=-1))
-        loss_drift_V = 0.5 * jnp.mean(jnp.sum(b_V**2, axis=(-1, -2))) - jnp.mean(jnp.sum(b_V * I_vel_target[1], axis=(-1, -2)))
-        
-        # Noise Loss
-        # z_tau is (P_z_tau, V_z_tau)
-        loss_noise_P = 0.5 * jnp.mean(jnp.sum(eta_P**2, axis=-1)) - jnp.mean(jnp.sum(eta_P * z_tau[0], axis=-1))
-        loss_noise_V = 0.5 * jnp.mean(jnp.sum(eta_V**2, axis=(-1, -2))) - jnp.mean(jnp.sum(eta_V * z_tau[1], axis=(-1, -2)))
+        gamma, dot_gamma = self.noise_fn(tau)
 
-        return loss_drift_P + loss_drift_V + loss_noise_P + loss_noise_V
-    
-    @jax.jit
-    def gradient_step(self, params, opt_state, key, batch):
-        """
-        Performs one iteration of gradient descent.
-        """
-        # Split key for interpolation stochasticity
-        key, step_key = jax.random.split(key)
+        # Stochastic Interpolation
+        # X_tau = I(tau) + gamma(tau)Z
+        P_tau = I_p + gamma * z_p
+        V_tau = I_v + gamma * z_v
         
-        # Calculate loss and gradients
-        loss, grads = jax.value_and_grad(self.loss_fn)(params, step_key, batch)
+        # Target Velocity: d/dtau [ I(tau) + gamma(tau)Z ]
+        target_vel_p = dot_I_p + dot_gamma * z_p
+        target_vel_v = dot_I_v + dot_gamma * z_v
+
+        # Model Predictions
+        x_tilde = self._cond_transform.apply(params['f_cond'], R, P_0, V_0)
         
-        # Update parameters using Optax
-        updates, next_opt_state = self.optimizer.update(grads, opt_state, params)
-        next_params = optax.apply_updates(params, updates)
+        # Headers receive (Conditioning, Current State, Time)
+        hat_b_p = self._header_transform.apply(params['b_P'], x_tilde, P_tau, V_tau, tau)
+        hat_b_v = self._header_transform.apply(params['b_V'], x_tilde, P_tau, V_tau, tau)
+        hat_eta_p = self._header_transform.apply(params['eta_P'], x_tilde, P_tau, V_tau, tau)
+        hat_eta_v = self._header_transform.apply(params['eta_V'], x_tilde, P_tau, V_tau, tau)
+
+        # Flexible Tensor Cloud Loss (Eq 6 & 7)
+        def cloud_dot_loss(pred, target):
+            # 0.5 * ||pred||^2 - (pred · target)
+            sq_norm = 0.5 * jnp.mean(e3nn.norm(pred).array**2)
+            dot_prod = jnp.mean(e3nn.dot(pred, target).array)
+            return sq_norm - dot_prod
+
+        # Total Loss = Loss(Drift) + Loss(Noise)
+        # Summing P and V components implements the Xi · Xj dot product defined in paper
+        loss_drift = cloud_dot_loss(hat_b_p, target_vel_p) + cloud_dot_loss(hat_b_v, target_vel_v)
+        loss_noise = cloud_dot_loss(hat_eta_p, z_p) + cloud_dot_loss(hat_eta_v, z_v)
         
-        return next_params, next_opt_state, loss
+        return loss_drift + loss_noise
+
+
+    @partial(jax.jit, static_argnums=(0,))
+    def step(self, params, opt_state, key, batch):
+        loss, grads = jax.value_and_grad(self.loss_fn)(params, key, batch)
+        updates, opt_state = self.optimizer.update(grads, opt_state, params)
+        params = optax.apply_updates(params, updates)
+        return params, opt_state, loss

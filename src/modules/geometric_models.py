@@ -69,7 +69,11 @@ class SpatialConvolution(hk.Module):
             R_squeezed = jnp.squeeze(R, axis=1)
             R_irreps = e3nn.IrrepsArray(f"{R_squeezed.shape[-1]}x0e", R_squeezed)    
             v_intermediate = e3nn.concatenate([ receiver_features.filtered(lmax=0),sender_features.filtered(lmax=0)])
-            gate_in = jnp.concatenate([v_intermediate.array], axis=-1)
+            v_node = sender_features.filtered("1o")
+            v_norm = e3nn.norm(v_node)
+            
+            #concatenate scalars for gating, optionally also concatenate r0, s0, R_irreps and v_norm
+            gate_in = jnp.concatenate([v_intermediate.array, v_norm], axis=-1)
 
             gate = hk.nets.MLP([32, geo_features.irreps.num_irreps])(gate_in)
             
@@ -154,8 +158,14 @@ class EquiJumpDeepNetwork(hk.Module):
         self.distance_cutoff = distance_cutoff
 
         self.verbose = verbose
-    def __call__(self, node_features: e3nn.IrrepsArray, positions: jnp.ndarray):
-
+    def __call__(self, node_features: e3nn.IrrepsArray, positions: jnp.ndarray, tau: jnp.ndarray = None):
+        
+        if tau is not None:
+            # Broadcast tau to [num_nodes, 1] and treat as 1x0e
+            tau_val = jnp.broadcast_to(tau, (node_features.shape[0], 1))
+            tau_irreps = e3nn.IrrepsArray("1x0e", tau_val)
+            node_features = e3nn.concatenate([node_features, tau_irreps], axis=-1)
+            
         # --- Internal Graph Construction ---
         num_nodes = positions.shape[0]
 

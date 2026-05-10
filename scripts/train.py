@@ -41,7 +41,7 @@ input_irreps = "1x0e + 21x0e + 1x1o + 13x1o" + latent_irreps
 
 # the output irreps of the drift and noise networks
 # odd vector for node position drift, 13 odd vectors for heavy atoms vecto drift
-target_irreps = "1x1o +13x10"
+target_irreps = "1x1o +13x1o"
 trainer = EquiJumpTrainer(latent_irreps = latent_irreps, 
                           input_irreps = input_irreps,
                           target_irreps = target_irreps )
