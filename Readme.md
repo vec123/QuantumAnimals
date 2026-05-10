@@ -81,7 +81,8 @@ This enables the implementation of a specific information flow in which one comp
 <br>
 <br>
 2: The output features can be added to the tensor cloud at time tau, which is obtained by stochastic interpolation. Additionally, a scalar field representing the time tau is added. This is the input tensor cloud to the following four networks, each tasked with the approximation of the position and feature drift and noise respectively.
-
+<br>
+<br>
 <p align="center">
   <img src="images/computing/EquiJump_full.png" alt="SpatialConvolution Pseudocode" height="300">>
 </p>
