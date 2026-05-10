@@ -25,7 +25,7 @@ Let us instead assume that the molecular dynamics are determined completely by t
 </p>
 
 
-This representation does not scale well. Other papers, such as EquiJump and Ophiuchus use a residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom. A protein can be understood as a one-dimensional sequence of these residue descriptions. This description scales better. The following image shows the residues and the corresponding atoms.
+This representation does not scale well. Other papers, such as EquiJump and Ophiuchus use a coarse residue representation. Each Amino-Acid is represented by its label, the position of its C_alpha atom and the positions of other atoms relative to the C_alpha atom. A protein can be understood as a one-dimensional sequence of these residue descriptions. This description scales better. The following image shows the residues and the corresponding atoms.
 Aparently it is common to consider only the heavy atoms. Then a residual has maximally 13 such connections.
 
 
