@@ -180,7 +180,7 @@ class EquiJumpLayer(hk.Module):
         
         # Final normalization
         h_norm = EquivariantLayerNorm(self.target_irreps, name="layer_norm")(res)
-
+        #h_norm = res
         if self.verbose:
             print("-------------- Finished: EquiJumpLayer --------------")
             print(f"msg.irreps: {msg.irreps}")

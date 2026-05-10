@@ -1,0 +1,16 @@
+defaults:
+  - _self_
+  - model: default
+  - data: chignolin
+
+training:
+  lr: 5e-5
+  epochs: 20
+  coord_scale: 0.1
+  batch_size: 1
+  seed: 42
+  checkpoint_dir: "checkpoints"
+
+logging:
+  use_wandb: true
+  project: "EquiJump-MD"
