@@ -55,6 +55,8 @@ The i-th resiudal will be represented as {R_i, P_i, V_i} with R_i being its labe
 
 Step 2: Building the NN modules
 
+To ensure a fully equivariant architecture, geometric features are used. 
+A strong library for geometric deep learning is e3nn, the backbone of well-established architectures, such as MACE.
 Three mechanisms are implemented.
 
 The Self-Interaction Mechanism (updates the tensor cloud of each residual independently by performing tensor-products with its own features) 
