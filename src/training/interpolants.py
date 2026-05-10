@@ -8,9 +8,10 @@ def linear_interpolant(x0, x1, tau):
 
 def sine_noise_schedule(tau):
     """gamma(tau) = sin(pi * tau)"""
+    const  = 0.1
     val = jnp.sin(jnp.pi * tau)
     dot = jnp.pi * jnp.cos(jnp.pi * tau)
-    return val, dot
+    return const*val, const*dot
 
 # Example of a different schedule you could swap in:
 def vp_noise_schedule(tau):

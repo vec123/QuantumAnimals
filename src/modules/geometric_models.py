@@ -5,15 +5,16 @@ import jax
 import jax.numpy as jnp
 import e3nn_jax as e3nn
 
+from src.modules.LayerNorm import EquivariantLayerNorm
 
 class SelfInteraction(hk.Module):
-    def __init__(self, target_irreps, l_max = 3, name=None, verbose = True):
+    def __init__(self, target_irreps, l_max = 1, name=None, verbose = True):
         super().__init__(name=name)
         self.target_irreps = e3nn.Irreps(target_irreps)
         self.l_max = l_max
         self.verbose = verbose
     def __call__(self, node_features: e3nn.IrrepsArray):
-        # 1. Tensor Product: V_i \otimes V_i 
+        # Tensor Product: V_i \otimes V_i 
         v_sq = e3nn.tensor_product(node_features, node_features).regroup()
         v_sq = v_sq.filter(lmax=self.l_max)
 
@@ -43,7 +44,7 @@ class SelfInteraction(hk.Module):
         return  v_out
     
 class SpatialConvolution(hk.Module):
-    def __init__(self, target_irreps, sh_lmax=3, name=None, verbose = True):
+    def __init__(self, target_irreps, sh_lmax=1, name=None, verbose = True):
         super().__init__(name=name)
         self.target_irreps = e3nn.Irreps(target_irreps)
         self.sh_lmax = sh_lmax
@@ -71,9 +72,9 @@ class SpatialConvolution(hk.Module):
             v_intermediate = e3nn.concatenate([ receiver_features.filtered(lmax=0),sender_features.filtered(lmax=0)])
             v_node = sender_features.filtered("1o")
             v_norm = e3nn.norm(v_node)
-            
+
             #concatenate scalars for gating, optionally also concatenate r0, s0, R_irreps and v_norm
-            gate_in = jnp.concatenate([v_intermediate.array, v_norm], axis=-1)
+            gate_in = jnp.concatenate([v_intermediate.array], axis=-1)
 
             gate = hk.nets.MLP([32, geo_features.irreps.num_irreps])(gate_in)
             
@@ -119,6 +120,7 @@ class EquiJumpLayer(hk.Module):
         self.verbose = verbose
 
     def __call__(self, graph, positions):
+
         # Self Interaction (Update V based on internal residue structure)
         in_irreps = graph.nodes
         h = SelfInteraction(self.target_irreps)(graph.nodes)
@@ -134,8 +136,7 @@ class EquiJumpLayer(hk.Module):
             skip =e3nn.haiku.Linear(msg.irreps, name="res_proj", force_irreps_out=True)(in_irreps)
 
         res = msg+skip
-        #h_norm = e3nn.haiku.LayerNorm(self.target_irreps)(res)
-        h_norm =res
+        h_norm = EquivariantLayerNorm(self.target_irreps, name=f"layer_norm")(res)
    
         if self.verbose:
             print("-------------- Finished: EquiJumpLayer --------------")
@@ -144,10 +145,53 @@ class EquiJumpLayer(hk.Module):
             print("out.irreps: ", h_norm.irreps)
 
         return h_norm
+
+class EquiJumpLayer(hk.Module):
+    def __init__(self, target_irreps, name=None, verbose = True):
+        super().__init__(name=name)
+        self.target_irreps = e3nn.Irreps(target_irreps)
+        self.verbose = verbose
+
+    def __call__(self, graph, positions):
+        in_nodes = graph.nodes
+        
+        # Self Interaction
+        h = SelfInteraction(self.target_irreps, name="si")(in_nodes)
+        graph = graph._replace(nodes=h)
+        
+        # Spatial Convolution
+        graph = SpatialConvolution(self.target_irreps, name="spatial_conv")(graph, positions)
+        msg = graph.nodes
+        
+        # Skip Connection
+        # check if the irrep DEFINITIONS match, not just the shape.
+        if in_nodes.irreps == msg.irreps:
+            skip = in_nodes
+        else:
+            # force_irreps_out ensures the Linear layer outputs the EXACT irreps of msg
+            skip = e3nn.haiku.Linear(
+                msg.irreps, 
+                name="res_proj", 
+                force_irreps_out=True
+            )(in_nodes)
+
+        # Now msg and skip have identical Irreps, so addition is allowed.
+        res = msg + skip
+        
+        # Final normalization
+        h_norm = EquivariantLayerNorm(self.target_irreps, name="layer_norm")(res)
+
+        if self.verbose:
+            print("-------------- Finished: EquiJumpLayer --------------")
+            print(f"msg.irreps: {msg.irreps}")
+            print(f"skip.irreps: {skip.irreps}")
+            print(f"out.irreps: {h_norm.irreps}")
+
+        return h_norm
     
 class EquiJumpDeepNetwork(hk.Module):
     def __init__(self, L=4, input_irreps="32x0e + 16x1o", internal_irreps="32x0e + 16x1o", 
-                 output_irreps="16x0e", distance_cutoff=10.0, name=None, verbose = True):
+                 output_irreps="16x0e", distance_cutoff=10.0, max_edges = 100, name=None, verbose = True):
         super().__init__(name=name)
         self.L = L
         
@@ -156,8 +200,9 @@ class EquiJumpDeepNetwork(hk.Module):
         self.output_irreps = e3nn.Irreps(output_irreps)
 
         self.distance_cutoff = distance_cutoff
-
+        self.max_edges = max_edges
         self.verbose = verbose
+        
     def __call__(self, node_features: e3nn.IrrepsArray, positions: jnp.ndarray, tau: jnp.ndarray = None):
         
         if tau is not None:
@@ -171,7 +216,8 @@ class EquiJumpDeepNetwork(hk.Module):
 
         senders, receivers = e3nn.radius_graph(
             pos=positions, 
-            r_max=self.distance_cutoff
+            r_max=self.distance_cutoff,
+            size = self.max_edges
         )
         # Create the jraph structure
         h_jraph = jraph.GraphsTuple(
@@ -212,4 +258,9 @@ class EquiJumpDeepNetwork(hk.Module):
         
         h_out_nodes = SelfInteraction(target_irreps=self.output_irreps,  verbose = self.verbose)(h_agg_nodes)
 
+        
+        gate = hk.get_parameter("output_gate", shape=(), init=hk.initializers.Constant(1e-3))
+
+        # 3. Multiply. On Step 1, this returns 0. 
+        # On Step 2+, it learns to become 1.0.
         return h_out_nodes
